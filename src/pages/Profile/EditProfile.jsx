@@ -1,15 +1,14 @@
-// src/pages/EditProfile.js
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, storage, db } from '../../firebase/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { updateProfile, updateEmail } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { FaPen, FaBell, FaLanguage, FaCamera } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
 import AvatarSelector from '../../components/AvatarSelector';
-import { getDoc } from 'firebase/firestore';
+import {avatarMap} from '../../assets/assets' // ✅ import avatar map
 
 const EditProfile = () => {
     const [user] = useAuthState(auth);
@@ -25,17 +24,18 @@ const EditProfile = () => {
         const fetchUserData = async () => {
             if (!user) return;
             try {
-                const docRef = doc(db, "users", user.uid);
+                const docRef = doc(db, 'users', user.uid);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     setName(data.displayName || '');
                     setBio(data.bio || '');
                     setEmail(data.email || '');
-                    setAvatarURL(data.photoURL || '');
+                    // ✅ resolve avatarMap if saved value is a path
+                    setAvatarURL(avatarMap[data.photoURL] || data.photoURL || '');
                 }
             } catch (error) {
-            console.error("Failed to fetch profile:", error);
+                console.error('Failed to fetch profile:', error);
             }
         };
         fetchUserData();
@@ -46,7 +46,6 @@ const EditProfile = () => {
         setSaving(true);
 
         try {
-            // Update Auth profile (name and photo)
             await updateProfile(user, {
                 displayName: name,
                 photoURL: avatarURL,
@@ -56,18 +55,20 @@ const EditProfile = () => {
                 await updateEmail(user, email);
             }
 
-            // Save bio to Firestore
             const userRef = doc(db, 'users', user.uid);
-            await setDoc(userRef, {
-                uid: user.uid,
-                displayName: name,
-                displayNameLower: name.toLowerCase(),
-                email: user.email,
-                emailLower: user.email.toLowerCase(),
-                photoURL: avatarURL,
-                bio: bio || '',
-            }, { merge: true });
-
+            await setDoc(
+                userRef,
+                {
+                    uid: user.uid,
+                    displayName: name,
+                    displayNameLower: name.toLowerCase(),
+                    email: user.email,
+                    emailLower: user.email.toLowerCase(),
+                    photoURL: avatarURL, // ✅ store final usable URL
+                    bio: bio || '',
+                },
+                { merge: true }
+            );
 
             toast.success('Profile updated successfully');
         } catch (error) {
@@ -77,7 +78,6 @@ const EditProfile = () => {
             setSaving(false);
         }
     };
-
 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
@@ -107,15 +107,20 @@ const EditProfile = () => {
             </div>
         );
     }
-    
 
     return (
-        <div className='flex h-screen overflow-hidden bg-gray-900 text-white'>
-            {showAvatarSelector && <AvatarSelector onSelect={handleAvatarSelect} />}
+        <div className="flex h-screen overflow-hidden bg-gray-900 text-white">
+            {showAvatarSelector && (
+                <AvatarSelector onSelect={handleAvatarSelect} onClose={() => setShowAvatarSelector(false)} />
+            )}
 
-            <div className='flex flex-col w-full bg-[#212121] overflow-y-auto'>
-                <div className='flex items-center justify-between text-white p-4 border-b border-gray-800'>
-                    <button onClick={handleSave} disabled={saving} className='text-gray-200 flex items-center gap-1 hover:text-indigo-400'>
+            <div className="flex flex-col w-full bg-[#212121] overflow-y-auto">
+                <div className="flex items-center justify-between text-white p-4 border-b border-gray-800">
+                    <button
+                        onClick={handleSave}
+                        disabled={saving}
+                        className="text-gray-200 flex items-center gap-1 hover:text-indigo-400"
+                    >
                         <FaPen /> {saving ? 'Saving...' : 'Save'}
                     </button>
                 </div>
@@ -146,49 +151,49 @@ const EditProfile = () => {
                     <p className="text-sm text-gray-400">Online</p>
                 </div>
 
-                <div className='p-4 space-y-5'>
+                <div className="p-4 space-y-5">
                     <div>
-                        <label className='block text-sm mb-1 text-gray-400'>Display Name</label>
+                        <label className="block text-sm mb-1 text-gray-400">Display Name</label>
                         <input
                             type="text"
-                            className='w-full px-4 py-2 rounded bg-[#2c2c3f] text-white outline-none'
+                            className="w-full px-4 py-2 rounded bg-[#2c2c3f] text-white outline-none"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                         />
                     </div>
 
                     <div>
-                        <label className='block text-sm mb-1 text-gray-400'>Bio</label>
+                        <label className="block text-sm mb-1 text-gray-400">Bio</label>
                         <input
                             type="text"
-                            className='w-full px-4 py-2 rounded bg-[#2c2c3f] text-white outline-none'
+                            className="w-full px-4 py-2 rounded bg-[#2c2c3f] text-white outline-none"
                             value={bio}
                             onChange={(e) => setBio(e.target.value)}
                         />
                     </div>
 
                     <div>
-                        <label className='block text-sm mb-1 text-gray-400'>Email</label>
+                        <label className="block text-sm mb-1 text-gray-400">Email</label>
                         <input
                             type="email"
-                            className='w-full px-4 py-2 rounded bg-[#2c2c3f] text-white outline-none'
+                            className="w-full px-4 py-2 rounded bg-[#2c2c3f] text-white outline-none"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
                     </div>
                 </div>
 
-                <div className='px-4 mt-6 space-y-2'>
-                    <div className='flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-700 rounded-md'>
-                        <FaBell className='text-gray-400' />
+                <div className="px-4 mt-6 space-y-2">
+                    <div className="flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-700 rounded-md">
+                        <FaBell className="text-gray-400" />
                         <span>Notifications</span>
                     </div>
-                    <div className='flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-700 rounded-md'>
-                        <FaBell className='text-gray-400' />
+                    <div className="flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-700 rounded-md">
+                        <FaBell className="text-gray-400" />
                         <span>App Display</span>
                     </div>
-                    <div className='flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-700 rounded-md'>
-                        <FaLanguage className='text-gray-400' />
+                    <div className="flex items-center gap-4 p-3 cursor-pointer hover:bg-gray-700 rounded-md">
+                        <FaLanguage className="text-gray-400" />
                         <span>Language</span>
                     </div>
                 </div>

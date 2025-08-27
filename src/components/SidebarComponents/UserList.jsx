@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../firebase/firebase';
+// import { avatarMap } from '../../assets'; // ✅ import avatar map
+import {avatarMap} from '../../assets/assets'
 
 const UserList = ({ currentUser, recentChats, onUserSelect }) => {
     const [userProfiles, setUserProfiles] = useState({});
 
-    // Fetch displayName and photoURL for each other user
+    // Fetch displayName + photoURL for each user
     useEffect(() => {
         const fetchUsers = async () => {
             const newProfiles = {};
             for (let chat of recentChats) {
                 const otherUserId =
-                chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
+                    chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
                 if (!userProfiles[otherUserId]) {
                     const userDoc = await getDoc(doc(db, 'users', otherUserId));
                     if (userDoc.exists()) {
@@ -20,9 +22,9 @@ const UserList = ({ currentUser, recentChats, onUserSelect }) => {
                 }
             }
             setUserProfiles((prev) => ({ ...prev, ...newProfiles }));
-            };
+        };
 
-            if (recentChats.length > 0) {
+        if (recentChats.length > 0) {
             fetchUsers();
         }
     }, [recentChats]);
@@ -31,12 +33,14 @@ const UserList = ({ currentUser, recentChats, onUserSelect }) => {
         <div>
             {recentChats.map((chat, index) => {
                 const otherUserId =
-                chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
+                    chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
                 const isUnread = chat.receiverId === currentUser.uid && !chat.seen;
                 const userData = userProfiles[otherUserId] || {};
 
                 const displayName = userData.displayName || 'Unknown User';
-                const photoURL = userData.photoURL || '/default-avatar.png';
+                // ✅ Map avatar path -> actual image if needed
+                const photoURL =
+                    avatarMap[userData.photoURL] || userData.photoURL || '/default-avatar.png';
 
                 return (
                     <div
@@ -62,10 +66,10 @@ const UserList = ({ currentUser, recentChats, onUserSelect }) => {
                         <div className="flex flex-col items-end">
                             {chat.timestamp?.toDate ? (
                                 <p className="text-xs text-gray-500">
-                                {chat.timestamp.toDate().toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                })}
+                                    {chat.timestamp.toDate().toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                    })}
                                 </p>
                             ) : (
                                 <p className="text-xs text-gray-500">...</p>
