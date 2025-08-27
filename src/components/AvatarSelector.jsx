@@ -1,6 +1,6 @@
 import React from 'react';
 import { FaTimes } from 'react-icons/fa';
-import {avatarMap} from '../assets/assets' // ✅ import avatars array
+import {avatarMap, avatars} from '../assets/assets' // ✅ import avatars array
 
 const AvatarSelector = ({ onSelect, onClose }) => {
     return (

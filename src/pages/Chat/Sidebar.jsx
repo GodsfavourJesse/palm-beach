@@ -5,31 +5,36 @@ import UserSearch from '../../components/UserSearch';
 import UserList from '../../components/SidebarComponents/UserList';
 import { FaEllipsisV, FaSignOutAlt } from 'react-icons/fa';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '../../firebase/firebase';
+import { auth, db } from '../../firebase/firebase';
 import LogoutModal from '../../components/LogoutModal';
+import { doc, getDoc } from 'firebase/firestore';
 
 const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile }) => {
     const [user] = useAuthState(auth);
     const navigate = useNavigate();
     const [showMenu, setShowMenu] = useState(false);
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [bio, setBio] = useState('');
 
     useEffect(() => {
-            const fetchBio = async () => {
-                if (!user) return;
+        const fetchBio = async () => {
+            if (!user) return;
+            try {
                 const userDoc = await getDoc(doc(db, 'users', user.uid));
                 if (userDoc.exists()) {
                     setBio(userDoc.data().bio || '');
                 }
-            };
-            fetchBio();
-        }, [user]);
+            } catch (error) {
+                console.error('Error fetching bio:', error);
+            }
+        };
+        fetchBio();
+    }, [user]);
 
     const handleUserSelect = (user) => {
         onUserSelect(user);
         console.log('User selected:', user);
     };
-
 
     const handleLogout = async () => {
         try {
@@ -53,22 +58,22 @@ const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile }) => {
                         <MessageSquare size={20} />
                         Palm Beach
                     </h2>
-                    <div className='relative'>
+                    <div className="relative">
                         <button
-                            className='text-gray-400 hover:text-indigo-400 cursor-pointer'
-                            onClick={() => setShowMenu(prev => !prev)}
-                            title='More Options'
+                            className="text-gray-400 hover:text-indigo-400 cursor-pointer"
+                            onClick={() => setShowMenu((prev) => !prev)}
+                            title="More Options"
                         >
                             <FaEllipsisV size={18} />
                         </button>
                         {showMenu && (
-                            <div className='absolute right-0 mt-2 bg-gray-800 border border-gray-700 rounded shadow-lg z-10 w-30'>
+                            <div className="absolute right-0 mt-2 bg-gray-800 border border-gray-700 rounded shadow-lg z-10 w-30">
                                 <button
                                     onClick={() => {
                                         setShowMenu(false);
                                         setShowLogoutModal(true);
                                     }}
-                                    className='w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-red hover:text:-white text-sm text-gray-300'
+                                    className="w-full flex items-center gap-2 text-left px-4 py-2 hover:bg-red hover:text-white text-sm text-gray-300"
                                 >
                                     <FaSignOutAlt />
                                     Log Out
@@ -92,15 +97,24 @@ const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile }) => {
                 <UserSearch onUserSelect={handleUserSelect} />
             </div>
 
+            {/* Optional Bio Display */}
+            {bio && (
+                <p className="text-xs text-gray-400 italic mb-3 px-2">
+                    {bio}
+                </p>
+            )}
+
             {/* User List */}
             <div className="flex-1 overflow-y-auto no-scrollbar space-y-3">
-                <h3 className="text-sm font-semibold text-white/70 uppercase mb-1">Recent Chats</h3>
+                <h3 className="text-sm font-semibold text-white/70 uppercase mb-1">
+                    Recent Chats
+                </h3>
                 <div className="space-y-1">
-                <UserList
-                    currentUser={currentUser}
-                    recentChats={recentChats}
-                    onUserSelect={onUserSelect}
-                />
+                    <UserList
+                        currentUser={currentUser}
+                        recentChats={recentChats}
+                        onUserSelect={onUserSelect}
+                    />
                 </div>
             </div>
         </div>
