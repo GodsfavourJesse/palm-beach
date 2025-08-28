@@ -12,6 +12,7 @@ import ContactsPage from "./pages/SidebarSettings/ContactsPage";
 import CallsPage from "./pages/SidebarSettings/CallsPage";
 import Settings from "./pages/Settings";
 import InviteFriends from "./pages/InviteFriends";
+import WelcomePage from "./pages/WelcomePage";
 
 function App() {
     useEffect(() => {
@@ -34,7 +35,8 @@ function App() {
 
     return (
         <Routes>
-            <Route path="/" element={<Signup />} />
+            <Route path="/" element={<WelcomePage />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/home" element={

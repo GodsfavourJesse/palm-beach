@@ -11,6 +11,9 @@ import beach_9 from './beach-9.jpg'
 import portrait from './potrait.jpg'
 import point_bridge from './point-bridge-logo.png'
 import beach from './undraw_surfer_sf60.svg'
+import welcomeImg from './undraw_texting_tgrx.svg'
+import OnlineCommunity from './undraw_online-community_3o0l.svg'
+import workChat from './undraw_work-chat_hc3y.svg'
 
 // Users default avatars
 import avatar_img1 from './avatars/avatar_img1.webp';
@@ -65,6 +68,9 @@ export { avatarMap };
 
 export const assets = {
     sunset_tour,
+    OnlineCommunity,
+    workChat,
+    welcomeImg,
     beach,
     beach_1,
     beach_2,

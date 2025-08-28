@@ -54,7 +54,7 @@ function Welcome () {
 
     return (
         <form onSubmit={handleLogin} className={`space-y-5 max-w-md mx-auto p-4 transition-opacity duration-500 ${loading ? "opacity-60 pointer-events-none" : ""}`}>
-            <h2 className="text-2xl font-semibold text-white mb-4 text-center">Login</h2>
+            {/* <h2 className="text-2xl font-semibold text-white mb-4 text-center">Login</h2> */}
 
             <input
                 type="email"
@@ -78,7 +78,7 @@ function Welcome () {
                     onClick={() => setShowPassword((prev) => !prev)}
                     className="absolute top-1/2 right-4 transform -translate-y-1/2 text-gray-400 cursor-pointer"
                 >
-                {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                {showPassword ? <FiEyeOff size={15} /> : <FiEye size={15} />}
                 </div>
             </div>
 
@@ -108,7 +108,7 @@ function Welcome () {
             <Link to="/reset-password" className="text-sm text-indigo-400 hover:underline text-center block mt-2">
                 Forgot password?
             </Link>
-            <Link to="/" className="text-sm text-indigo-400 hover:underline text-center block mt-2">
+            <Link to="/signup" className="text-sm text-indigo-400 hover:underline text-center block mt-2">
             Sign up
             </Link>
 
