@@ -121,7 +121,7 @@ const ChatHome = () => {
     }
 
     return (
-        <div className="h-screen w-screen bg-black text-white overflow-hidden relative">
+        <div className="h-screen w-screen text-white overflow-hidden relative">
             {isMobile ? (
                 <div className="h-full w-full">
                     {!selectedUser ? (

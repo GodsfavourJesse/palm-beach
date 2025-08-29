@@ -92,7 +92,7 @@ export const sendMessage = async (sender, receiver, text) => {
     }
 };
 
-// 🔹 Update user online status
+//  Update user online status
 export const setUserOnlineStatus = async (userId, isOnline) => {
     try {
         const userRef = doc(db, 'users', userId);
@@ -105,23 +105,41 @@ export const setUserOnlineStatus = async (userId, isOnline) => {
     }
 };
 
-// 🔹 Track real-time online status of another user
+// Track real-time online status of another user with 10s grace period
 export const subscribeToUserStatus = (userId, callback) => {
-    const ref = doc(db, 'users', userId);
+  const ref = doc(db, "users", userId);
+  let offlineTimer = null;
 
-    return onSnapshot(ref, (snap) => {
-        if (snap.exists()) {
-            const data = snap.data();
-            callback({
-                isOnline: data.isOnline ?? false,
-                lastSeen: data.lastSeen?.toDate?.() || null,
-                state: data.state || 'offline',  // ✅ Make sure this is included
-            });
-        } else {
-        callback({ isOnline: false, state: 'offline' });
-        }
-    });
+  return onSnapshot(ref, (snap) => {
+    if (!snap.exists()) {
+      callback({ isOnline: false, state: "offline" });
+      return;
+    }
+
+    const data = snap.data();
+    const status = {
+      isOnline: data.isOnline ?? false,
+      lastSeen: data.lastSeen?.toDate?.() || null,
+      state: data.state || "offline",
+    };
+
+    if (status.isOnline) {
+      // clear any pending offline timer if user comes back
+      if (offlineTimer) {
+        clearTimeout(offlineTimer);
+        offlineTimer = null;
+      }
+      callback(status);
+    } else {
+      // delay broadcasting "offline" by 10s
+      if (offlineTimer) clearTimeout(offlineTimer);
+      offlineTimer = setTimeout(() => {
+        callback(status);
+      }, 10000);
+    }
+  });
 };
+
 
 export const updateUserStatusState = async (userId, state) => {
     try {
@@ -158,4 +176,33 @@ export const setupUserPresence = () => {
             }
         });
     });
+};
+
+
+// 🔹 Get all stories in real-time
+export const subscribeToStories = (callback) => {
+  const q = query(
+    collection(db, 'stories'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const stories = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(stories);
+  });
+};
+
+// 🔹 Add a new story
+export const addStory = async (user, imageUrl) => {
+  try {
+    await addDoc(collection(db, 'stories'), {
+      userId: user.uid,
+      username: user.displayName || "Unknown",
+      imageUrl,
+      createdAt: serverTimestamp(),
+    });
+  } catch (err) {
+    console.error("Error adding story:", err);
+    throw err;
+  }
 };

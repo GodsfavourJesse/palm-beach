@@ -1,19 +1,19 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { FaPaperPlane } from 'react-icons/fa';
+import React, { useRef, useState, useEffect } from "react";
+import { FaPaperPlane } from "react-icons/fa";
 
 const MessageInput = ({ onSend, disabled }) => {
-    const [text, setText] = useState('');
+    const [text, setText] = useState("");
     const textareaRef = useRef(null);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!text.trim()) return;
         onSend(text.trim());
-        setText('');
+        setText("");
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             handleSubmit(e);
         }
@@ -21,7 +21,7 @@ const MessageInput = ({ onSend, disabled }) => {
 
     useEffect(() => {
         if (textareaRef.current) {
-            textareaRef.current.style.height = 'auto';
+            textareaRef.current.style.height = "auto";
             textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
         }
     }, [text]);
@@ -29,7 +29,7 @@ const MessageInput = ({ onSend, disabled }) => {
     return (
         <form
             onSubmit={handleSubmit}
-            className="flex items-center p-3 border-t border-gray-700"
+            className="flex items-end gap-2 p-3 bg-white"
         >
             <textarea
                 ref={textareaRef}
@@ -38,15 +38,15 @@ const MessageInput = ({ onSend, disabled }) => {
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message..."
-                className="flex-1 resize-none px-4 py-2 bg-[#2b2c3f] text-white rounded-xl outline-none max-h-40 overflow-y-auto"
+                className="flex-1 resize-none px-4 py-2 bg-gray-50 text-gray-800 rounded-2xl outline-none border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition max-h-40 overflow-y-auto"
                 disabled={disabled}
             />
             <button
                 type="submit"
-                className="ml-3 text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
-                disabled={disabled}
+                disabled={disabled || !text.trim()}
+                className="p-3 rounded-full bg-indigo-500 text-white shadow-md hover:bg-indigo-600 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-                <FaPaperPlane size={18} />
+                <FaPaperPlane size={16} />
             </button>
         </form>
     );

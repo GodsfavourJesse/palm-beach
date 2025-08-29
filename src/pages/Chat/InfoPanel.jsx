@@ -135,7 +135,7 @@ const InfoPanel = () => {
                     {/* Invite Button */}
                     <div className="p-4 border-t border-gray-700">
                         <button
-                            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 w-full py-2 rounded-md transition cursor-pointer"
+                            className="flex items-center justify-center gap-2 bg-yellow-600 hover:bg-indigo-700 w-full py-2 rounded-md transition cursor-pointer"
                             onClick={() => navigate('/invite-friends')}
                         >
                             <FaUserPlus /> Invite Friends
