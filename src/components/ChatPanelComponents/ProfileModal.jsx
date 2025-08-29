@@ -1,97 +1,108 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { auth } from '../../firebase/firebase';
-import { subscribeToUserStatus, updateUserStatusState } from '../../lib/FirebaseHelpers';
-import UserStatusIndicator from './UserStatusIndicator';
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowLeft, Info, User as UserIcon, Calendar } from "lucide-react";
+import { auth } from "../../firebase/firebase";
+import { subscribeToUserStatus, updateUserStatusState } from "../../lib/FirebaseHelpers";
+import UserStatusIndicator from "./UserStatusIndicator";
 
 const ProfileModal = ({ user, onClose }) => {
-  const currentUser = auth.currentUser;
-  const isCurrentUser = currentUser?.uid === user?.id;
+    const currentUser = auth.currentUser;
+    const isCurrentUser = currentUser?.uid === user?.id;
 
-  const [status, setStatus] = useState({ isOnline: null, state: 'offline' });
+    const [status, setStatus] = useState({ isOnline: null, state: "offline" });
+    const [createdAt, setCreatedAt] = useState(null);
 
-  useEffect(() => {
-    if (!user?.id) return;
+    useEffect(() => {
+        if (!user?.id) return;
 
-    const unsubscribe = subscribeToUserStatus(user.id, (statusData) => {
-      setStatus({
-        isOnline: statusData?.isOnline ?? false,
-        state: statusData?.state || 'offline',
-      });
-    });
+        // Subscribe to status changes
+        const unsubscribe = subscribeToUserStatus(user.id, (statusData) => {
+            setStatus({
+                isOnline: statusData?.isOnline ?? false,
+                state: statusData?.state || "offline",
+            });
+        });
 
-    return () => unsubscribe();
-  }, [user]);
+        // Get account creation date from Firebase Auth
+        if (user?.id) {
+            auth.getUser
+            if (user.metadata?.creationTime) {
+                setCreatedAt(new Date(user.metadata.creationTime));
+            }
+        }
 
-  const handleStatusChange = async (e) => {
-    const newStatus = e.target.value;
-    await updateUserStatusState(currentUser.uid, newStatus);
-  };
+        return () => unsubscribe();
+    }, [user]);
 
-  const renderStatus = () => {
-    const statusMap = {
-      online: '🟢 Online',
-      away: '🕒 Away',
-      busy: '🔴 Busy',
-      offline: '⚫ Offline',
+    const handleStatusChange = async (e) => {
+        const newStatus = e.target.value;
+        await updateUserStatusState(currentUser.uid, newStatus);
     };
-
-    if (status.isOnline === null) return 'Loading...';
-    return status.isOnline ? statusMap[status.state || 'online'] : statusMap['offline'];
-  };
 
     return (
         <motion.div
-            className="fixed inset-0 z-50 bg-[#1e1e2f] text-white overflow-y-auto"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            className="fixed inset-0 z-50 bg-white flex flex-col"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
         >
-            <div className="p-6 flex flex-col items-center min-h-screen">
-                <img
-                    src={user.photoURL || '/default-avatar.png'}
-                    alt="avatar"
-                    className="w-32 h-32 rounded-full object-cover mb-4 border-4 border-gray-600"
-                />
-                    <h2 className="text-2xl font-bold">{user.displayName}</h2>
-                    <p className="text-sm text-gray-400 mb-1">{user.email}</p>
-                    <UserStatusIndicator
-                        isOnline={status.isOnline}
-                        state={status.state}
-                    />
-
-                {/* Bio */}
-                <div className="mt-6 w-full max-w-md space-y-3 text-sm">
-                <div className="bg-[#2b2c3f] p-4 rounded-md">
-                    <p className="text-gray-400 mb-1">About</p>
-                    <p>{user.bio || 'No bio available'}</p>
-                </div>
-                </div>
-
-                {/* Status selector for current user only */}
-                {isCurrentUser && (
-                <div className="mt-6 w-full max-w-md">
-                    <label className="block text-sm mb-1">Set Your Status:</label>
-                    <select
-                    value={status.state}
-                    onChange={handleStatusChange}
-                    className="w-full px-3 py-2 text-sm rounded bg-gray-800 text-white border border-gray-600"
-                    >
-                    <option value="online">🟢 Online</option>
-                    <option value="away">🕒 Away</option>
-                    <option value="busy">🔴 Busy</option>
-                    <option value="offline">⚫ Offline</option>
-                    </select>
-                </div>
-                )}
-
+            {/* Header */}
+            <div className="flex items-center gap-3 p-4 text-gray-900 bg-gray-50 shadow-md">
                 <button
-                className="mt-10 px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm"
-                onClick={onClose}
+                    onClick={onClose}
+                    className="p-2 rounded-full hover:bg-gray-200 transition"
                 >
-                Close
+                    <ArrowLeft size={20} />
                 </button>
+                <h2 className="text-lg font-semibold text-gray-900">Profile</h2>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                {/* Avatar & Basic Info */}
+                <div className="flex flex-col items-center text-center">
+                    <img
+                        src={user.photoURL || "/default-avatar.png"}
+                        alt="avatar"
+                        className="w-28 h-28 rounded-full object-cover shadow-md border-2 border-indigo-200"
+                    />
+                    <h3 className="mt-3 text-xl font-bold text-gray-900">
+                        {user.displayName || "Unnamed User"}
+                    </h3>
+                    <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
+
+                {/* About */}
+                <div>
+                    <h4 className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                        <Info size={16} /> About
+                    </h4>
+                    <div className="p-3 rounded-xl bg-gray-50 text-sm text-gray-700">
+                        {user.bio || "This user hasn’t written a bio yet."}
+                    </div>
+                </div>
+
+                {/* Extra Info */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="p-3 rounded-xl bg-gray-50">
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mb-1">
+                            <UserIcon size={14} /> Username
+                        </p>
+                        <p className="text-gray-800 font-medium">
+                            @{user.displayName?.toLowerCase().replace(/\s+/g, "_") || "user"}
+                        </p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-gray-50">
+                        <p className="text-xs text-gray-500 flex items-center gap-1 mb-1">
+                            <Calendar size={14} /> Joined
+                        </p>
+                        <p className="text-gray-800 font-medium">
+                            {createdAt
+                                ? createdAt.toLocaleDateString()
+                                : "Unknown"}
+                        </p>
+                    </div>
+                </div>
             </div>
         </motion.div>
     );
