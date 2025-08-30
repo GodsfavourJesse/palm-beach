@@ -8,7 +8,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "../../firebase/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile }) => {
+const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile, onOpenInfo }) => {
     const [user] = useAuthState(auth);
     const navigate = useNavigate();
     const [bio, setBio] = useState("");
@@ -34,6 +34,8 @@ const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile }) => {
         // you can navigate to a new chat page, or open a modal here
         navigate("/new-chat");
     };
+
+    
 
     return (
         <div
@@ -75,7 +77,12 @@ const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile }) => {
             </div>
 
             {/* Footer Menu (Mobile Only) */}
-            {isMobile && <SidebarFooter onNewChat={handleNewChat} />}
+            {isMobile && (
+                <SidebarFooter 
+                    onNewChat={handleNewChat} 
+                    onOpenInfo={onOpenInfo} 
+                />            
+            )}
         </div>
     );
 };

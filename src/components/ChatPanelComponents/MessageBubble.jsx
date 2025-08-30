@@ -27,13 +27,14 @@ const MessageBubble = ({ message }) => {
             }`}
         >
             <div
-            className={`max-w-[80%] p-3 rounded-2xl relative transition-all duration-300
-                shadow-md break-words
-                ${
-                isSentByCurrentUser
-                    ? "bg-indigo-700 text-white rounded"
-                    : "bg-gray-200 text-gray-900 rounded"
-                }`}
+                className={`max-w-[80%] p-3 rounded-2xl relative transition-all duration-300
+                    shadow-md break-words
+                    ${
+                        isSentByCurrentUser
+                            ? "bg-indigo-700 text-white rounded"
+                            : "bg-gray-200 text-gray-900 rounded"
+                    }`
+                }
             >
             {/* Message text */}
                 <p className="text-sm leading-snug">{message.text}</p>

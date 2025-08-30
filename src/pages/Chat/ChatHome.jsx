@@ -23,6 +23,11 @@ const ChatHome = () => {
     const [messages, setMessages] = useState([]);
     const [recentChats, setRecentChats] = useState([]);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [showInfoPanel, setShowInfoPanel] = useState(false);
+
+
+    const handleOpenInfoPanel = () => setShowInfoPanel(true);
+    const handleCloseInfoPanel = () => setShowInfoPanel(false);
 
     // Initial splash delay
     useEffect(() => {
@@ -130,6 +135,7 @@ const ChatHome = () => {
                             onUserSelect={setSelectedUser}
                             recentChats={recentChats}
                             isMobile={true}
+                            onOpenInfo={handleOpenInfoPanel}
                         />
                     ) : (
                         <ChatPanel
@@ -140,6 +146,13 @@ const ChatHome = () => {
                             isMobile={true}
                         />
                     )}
+
+                    {/* Overlay InfoPanel for mobile */}
+                    {showInfoPanel && (
+                        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm">
+                            <InfoPanel onClose={handleCloseInfoPanel} />
+                        </div>
+                    )}
                 </div>
             ) : (
                 <div className="flex h-full w-full gap-3">
@@ -148,6 +161,7 @@ const ChatHome = () => {
                         onUserSelect={setSelectedUser}
                         recentChats={recentChats}
                         isMobile={false}
+                        onOpenInfo={handleOpenInfoPanel}
                     />
                     <ChatPanel
                         selectedUser={selectedUser}
@@ -155,7 +169,9 @@ const ChatHome = () => {
                         onSendMessage={handleSendMessage}
                         isMobile={false}
                     />
-                    <InfoPanel />
+
+                    {/* InfoPanel shown conditionally */}
+                    {showInfoPanel && <InfoPanel onClose={handleCloseInfoPanel} />}
                 </div>
             )}
         </div>
