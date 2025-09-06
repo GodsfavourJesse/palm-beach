@@ -24,7 +24,6 @@ const gradients = [
   "bg-gradient-to-r from-teal-500 to-green-500",
 ];
 
-// Generate consistent gradient for user initials
 const getGradientForUser = (id) => {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
@@ -33,7 +32,6 @@ const getGradientForUser = (id) => {
   return gradients[Math.abs(hash) % gradients.length];
 };
 
-// Shuffle array for random display order
 const shuffleArray = (arr) => {
   return arr
     .map((a) => ({ sort: Math.random(), value: a }))
@@ -53,7 +51,6 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
   const currentUser = auth.currentUser;
   const observer = useRef();
 
-  // Fetch users from Firestore
   const fetchUsers = async (reset = false) => {
     if (reset) {
       setUsers([]);
@@ -82,14 +79,15 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
       else setLoadingMore(true);
 
       const snap = await getDocs(fsQuery(collection(db, "users"), ...constraints));
-      let list = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      let list = snap.docs.map((doc) => ({
+        uid: doc.id, // ✅ normalize to uid
+        ...doc.data(),
+      }));
 
-      // Remove self
       list = currentUser
-        ? list.filter((u) => u.uid !== currentUser.uid && u.id !== currentUser.uid)
+        ? list.filter((u) => u.uid !== currentUser.uid)
         : list;
 
-      // Shuffle for random order
       list = shuffleArray(list);
 
       setUsers((prev) => (reset ? list : [...prev, ...list]));
@@ -103,18 +101,15 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
     }
   };
 
-  // Debounce search input
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query.trim()), 400);
     return () => clearTimeout(t);
   }, [query]);
 
-  // Fetch when query changes
   useEffect(() => {
     fetchUsers(true);
   }, [debouncedQuery]);
 
-  // Infinite scroll observer
   const lastUserRef = useCallback(
     (node) => {
       if (loadingMore) return;
@@ -131,7 +126,6 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
     [loadingMore, hasMore]
   );
 
-  // Avatar logic
   const getAvatarSrc = (user) => {
     const photo = user.photoURL || user.profilePicture || user.photo || "";
     if (!photo) return null;
@@ -149,7 +143,6 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
 
   return (
     <div className="fixed inset-0 bg-white/95 backdrop-blur-sm z-50 p-5 overflow-y-auto">
-      {/* Top bar */}
       <div className="flex items-center gap-4 mb-5">
         <button
           onClick={onBack}
@@ -164,7 +157,6 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
         </div>
       </div>
 
-      {/* Search input */}
       <div className="relative mb-6">
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -178,7 +170,6 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
         />
       </div>
 
-      {/* User list */}
       {loading ? (
         <p className="text-center text-gray-500">Loading users…</p>
       ) : (
@@ -190,40 +181,33 @@ const SearchUsersPage = ({ onBack, onUserSelect }) => {
 
               return (
                 <div
-                  key={user.id || user.uid}
+                  key={user.uid}
                   ref={idx === users.length - 1 ? lastUserRef : null}
                   className="flex items-center gap-2 p-3 rounded-xl bg-white hover:bg-indigo-50 transition shadow-sm border border-gray-100"
                 >
-                  {/* Avatar */}
                   {avatar ? (
                     <img
                       src={avatar}
                       alt={name}
                       className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = "/default-avatar.png";
-                      }}
                     />
                   ) : (
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0 ${getGradientForUser(
-                        name
+                        user.uid
                       )}`}
                     >
                       {name.charAt(0).toUpperCase()}
                     </div>
                   )}
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-gray-900 truncate">{name}</p>
                     <p className="text-sm text-gray-500 truncate">{renderHandle(user)}</p>
                   </div>
 
-                  {/* Chat button */}
                   <button
-                    onClick={() => onUserSelect(user)} // ✅ This triggers chat open
+                    onClick={() => onUserSelect(user)} // ✅ will always have uid
                     className="p-2 rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition"
                   >
                     <MessageCircle size={18} />

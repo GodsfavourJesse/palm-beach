@@ -51,14 +51,15 @@ export const useChatEffects = ({
     }, [messages]);
 
     useEffect(() => {
-        if (!selectedUser || !currentUser) return;
+    if (!selectedUser?.id || !currentUser?.uid) return;  // ✅ ensure valid IDs
 
-        const typingRef = doc(db, 'users', selectedUser.id);
-        const unsubscribe = onSnapshot(typingRef, (docSnap) => {
-            const data = docSnap.data();
-            setIsTyping?.(data?.typingTo === currentUser.uid);
-        });
+    const typingRef = doc(db, 'users', selectedUser.id);
+    const unsubscribe = onSnapshot(typingRef, (docSnap) => {
+        const data = docSnap.data();
+        setIsTyping?.(data?.typingTo === currentUser.uid);
+    });
 
-        return () => unsubscribe();
-    }, [selectedUser, currentUser]);
+    return () => unsubscribe();
+}, [selectedUser, currentUser]);
+
 };

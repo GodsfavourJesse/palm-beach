@@ -30,7 +30,7 @@ const ChatHome = () => {
   const handleOpenInfoPanel = () => setShowInfoPanel(true);
   const handleCloseInfoPanel = () => setShowInfoPanel(false);
 
-  // Normalize selected user object
+  // ✅ Normalize selected user object (always has .uid)
   const handleUserSelect = (u) => {
     if (!u) return;
     const normalized = {
@@ -43,53 +43,57 @@ const ChatHome = () => {
     setShowSearch(false);
   };
 
-  // Splash screen
+  // ✅ Splash screen (2s)
   useEffect(() => {
     const timer = setTimeout(() => setInitialLoading(false), 2000);
     return () => clearTimeout(timer);
   }, []);
 
-  // Window resize
+  // ✅ Window resize handler
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auth check
+  // ✅ Auth check
   useEffect(() => {
     if (!loading && !user && !loggingOut) navigate('/login');
   }, [user, loading, loggingOut, navigate]);
 
-  // Recent chats
+  // ✅ Recent chats
   useEffect(() => {
     if (!user) return;
     const unsubscribe = getRecentChats(user, setRecentChats);
     return () => unsubscribe && unsubscribe();
   }, [user]);
 
-  // Messages with selected user
+  // ✅ Messages with selected user
   useEffect(() => {
     if (!selectedUser || !user) return;
     const unsubscribe = getMessagesBetweenUsers(user, selectedUser, setMessages);
     return () => unsubscribe && unsubscribe();
   }, [selectedUser, user]);
 
-  // Mark as seen
+  // ✅ Mark as seen
   useEffect(() => {
     const markSeen = async () => {
       const unseen = messages.filter(
-        (msg) => msg.receiverId === user.uid && !msg.seen
+        (msg) => msg.receiverId === user?.uid && !(msg.seen ?? false)
       );
       unseen.forEach(async (msg) => {
-        const msgRef = doc(db, 'messages', msg.id);
-        await updateDoc(msgRef, { seen: true });
+        try {
+          const msgRef = doc(db, 'messages', msg.id);
+          await updateDoc(msgRef, { seen: true });
+        } catch (err) {
+          console.error('Failed to mark as seen:', err);
+        }
       });
     };
-    if (selectedUser) markSeen();
+    if (selectedUser && user) markSeen();
   }, [messages, selectedUser, user]);
 
-  // Send message
+  // ✅ Send message
   const handleSendMessage = async (text) => {
     if (!user || !selectedUser) return;
     try {
@@ -100,16 +104,23 @@ const ChatHome = () => {
     }
   };
 
-  // Logout
+  // ✅ Logout (sign out immediately, then show spinner)
   const handleLogout = async () => {
     setLoggingOut(true);
-    setTimeout(() => {
-      signOut(auth);
+    try {
+      await signOut(auth);
       toast.success('Logged out successfully!');
-      navigate('/login');
-    }, 6000);
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000); // small delay for UX
+    } catch (err) {
+      console.error('Logout failed:', err);
+      toast.error('Logout failed');
+      setLoggingOut(false);
+    }
   };
 
+  // ✅ Loading states
   if (loading || initialLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-black text-white">
@@ -132,12 +143,16 @@ const ChatHome = () => {
     );
   }
 
+  // ✅ Main UI
   return (
     <div className="h-screen w-screen text-white overflow-hidden relative">
       {isMobile ? (
         <div className="h-full w-full">
           {showSearch ? (
-            <SearchUsersPage onBack={() => setShowSearch(false)} onUserSelect={handleUserSelect} />
+            <SearchUsersPage
+              onBack={() => setShowSearch(false)}
+              onUserSelect={handleUserSelect}
+            />
           ) : !selectedUser ? (
             <Sidebar
               currentUser={user}
@@ -146,6 +161,7 @@ const ChatHome = () => {
               isMobile={true}
               onOpenInfo={handleOpenInfoPanel}
               onOpenSearch={() => setShowSearch(true)}
+              onLogout={handleLogout} // ✅ pass logout down if needed
             />
           ) : (
             <ChatPanel
@@ -166,7 +182,10 @@ const ChatHome = () => {
       ) : (
         <div className="flex h-full w-full gap-3">
           {showSearch ? (
-            <SearchUsersPage onBack={() => setShowSearch(false)} onUserSelect={handleUserSelect} />
+            <SearchUsersPage
+              onBack={() => setShowSearch(false)}
+              onUserSelect={handleUserSelect}
+            />
           ) : (
             <>
               <Sidebar
@@ -176,6 +195,7 @@ const ChatHome = () => {
                 isMobile={false}
                 onOpenInfo={handleOpenInfoPanel}
                 onOpenSearch={() => setShowSearch(true)}
+                onLogout={handleLogout}
               />
               <ChatPanel
                 selectedUser={selectedUser}
