@@ -29,7 +29,11 @@ const ChatHeader = ({ selectedUser, onBack, isMobile }) => {
             <div className="flex items-center gap-4 p-4 border-b border-gray-200 bg-white shadow-sm">
                 {isMobile && (
                     <button
-                        onClick={onBack}
+                        type="button"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onBack();
+                        }}
                         className="text-gray-600 hover:text-indigo-600 transition"
                     >
                         <ArrowLeft size={22} />

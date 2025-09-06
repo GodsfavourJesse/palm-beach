@@ -80,7 +80,8 @@ const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile, onOpenInfo 
             {isMobile && (
                 <SidebarFooter 
                     onNewChat={handleNewChat} 
-                    onOpenInfo={onOpenInfo} 
+                    onOpenInfo={onOpenInfo}
+                    onUserSelect={onUserSelect} 
                 />            
             )}
         </div>

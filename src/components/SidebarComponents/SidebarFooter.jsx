@@ -3,7 +3,7 @@ import { Home, User, MessageSquare, UserPlus, Users } from "lucide-react";
 import SearchUsersPage from "../SidebarFooterPages/SearchUserPage";
 import InviteFriendsMenu from "../SidebarFooterPages/InviteFriendsMenu";
 
-const SidebarFooter = ({ onOpenInfo }) => {
+const SidebarFooter = ({ onOpenInfo, onUserSelect }) => {
     const [showSheet, setShowSheet] = useState(false);
     const [showInvite, setShowInvite] = useState(false);
     const [ showSearch, setShowSearch] = useState(false);
@@ -151,7 +151,15 @@ const SidebarFooter = ({ onOpenInfo }) => {
 
             {showInvite && <InviteFriendsMenu onClose={() => setShowInvite(false)} />}
 
-            {showSearch && <SearchUsersPage onBack={() => setShowSearch(false)} />}
+            {showSearch && (
+                <SearchUsersPage 
+                    onBack={() => setShowSearch(false)} 
+                    onUserSelect={(user) => {
+                        onUserSelect(user);
+                        setShowSearch(false);
+                    } }
+                />
+            )}
         </>
     );
 };
