@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import MessageBubble from '../../components/ChatPanelComponents/MessageBubble';
 import MessageInput from '../../components/ChatPanelComponents/MessageInput';
 import ChatHeader from '../../components/ChatPanelComponents/ChatHeader';
@@ -42,6 +42,23 @@ const ChatPanel = ({ selectedUser, messages, onSendMessage, isTyping, onBack, is
         scrollToBottom,
     });
 
+    // Ensure isAtBottom updates correctly
+    useEffect(() => {
+        const handleScroll = () => {
+            if (!scrollRef.current) return;
+            const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
+            const atBottom = scrollHeight - scrollTop <= clientHeight + 50;
+            setIsAtBottom(atBottom);
+        };
+
+        const container = scrollRef.current;
+        if (container) {
+            container.addEventListener("scroll", handleScroll);
+            handleScroll();
+        }
+        return () => container?.removeEventListener("scroll", handleScroll);
+    }, []);
+
     const groupedMessages = groupMessagesByDate(messages || []);
 
     if (!selectedUser) {
@@ -55,10 +72,10 @@ const ChatPanel = ({ selectedUser, messages, onSendMessage, isTyping, onBack, is
     let unreadDividerShown = false;
 
     return (
-        <div className="flex-1 flex flex-col h-full relative">
+        <div className="flex-1 flex flex-col h-full relative bg-white">
 
             {/* Fixed Header */}
-            <div className="sticky top-0 z-20 bg-white shadow-sm">
+            <div className="sticky top-0 z-20 bg-white shadow-sm border-b">
                 <ChatHeader
                     selectedUser={selectedUser}
                     onClick={() => setShowProfile(true)}
@@ -71,6 +88,7 @@ const ChatPanel = ({ selectedUser, messages, onSendMessage, isTyping, onBack, is
             <div
                 ref={scrollRef}
                 className="flex-1 overflow-y-auto p-4 space-y-6 no-scrollbar"
+                
             >
                 {groupedMessages.map((group, index) => (
                     <div key={index}>
@@ -80,19 +98,19 @@ const ChatPanel = ({ selectedUser, messages, onSendMessage, isTyping, onBack, is
                         <div className="space-y-2 mt-2">
                             {group.messages.map((msg, msgIndex) => {
                                 const isUnread =
-                                !unreadDividerShown &&
-                                msg.receiverId === currentUser?.uid &&
-                                !msg.seen;
+                                    !unreadDividerShown &&
+                                    msg.receiverId === currentUser?.uid &&
+                                    !msg.seen;
                                 if (isUnread) unreadDividerShown = true;
                                 return (
-                                <React.Fragment key={msgIndex}>
-                                    {isUnread && (
-                                    <div className="text-center text-[11px] text-yellow-400 font-semibold py-1">
-                                        — Unread Messages —
-                                    </div>
-                                    )}
-                                    <MessageBubble message={msg} />
-                                </React.Fragment>
+                                    <React.Fragment key={msgIndex}>
+                                        {isUnread && (
+                                            <div className="text-center text-[11px] text-yellow-400 font-semibold py-1">
+                                                — Unread Messages —
+                                            </div>
+                                        )}
+                                        <MessageBubble message={msg} />
+                                    </React.Fragment>
                                 );
                             })}
                         </div>
@@ -102,9 +120,19 @@ const ChatPanel = ({ selectedUser, messages, onSendMessage, isTyping, onBack, is
                 <div ref={lastMessageRef} />
             </div>
 
+            {/* Floating Jump-to-Bottom Button */}
+            {!isAtBottom && (
+                <button
+                    onClick={scrollToBottom}
+                    className="absolute bottom-24 right-5 z-30 bg-indigo-600 text-white p-3 rounded-full shadow-md hover:bg-indigo-700 transition"
+                >
+                    ↓
+                </button>
+            )}
+
             {/* New Message Badge */}
             {showNewMsgBadge && (
-                <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20">
+                <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20">
                     <button
                         onClick={scrollToBottom}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3 py-1 rounded-full shadow-md"
@@ -114,7 +142,7 @@ const ChatPanel = ({ selectedUser, messages, onSendMessage, isTyping, onBack, is
                 </div>
             )}
 
-            {/* Fixed Input */}
+            {/* Fixed Input only inside ChatPanel */}
             <div className="sticky bottom-0 z-20 bg-white border-t">
                 <MessageInput onSend={onSendMessage} disabled={!selectedUser} />
             </div>

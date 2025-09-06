@@ -24,12 +24,11 @@ const UserSearch = ({ onUserSelect }) => {
             const snapshot = await getDocs(usersRef);
 
             const filtered = snapshot.docs
-                .map((doc) => ({ id: doc.id, ...doc.data() }))
-                .filter(
+            .map((doc) => ({ id: doc.id, ...doc.data() }))
+            .filter(
                 (user) =>
-                    user.displayNameLower?.includes(lowerTerm) ||
-                    user.emailLower?.includes(lowerTerm)
-                );
+                user.displayNameLower?.includes(lowerTerm) // ✅ only match by displayName
+            );
 
             setResults(filtered);
         } catch (error) {
@@ -39,6 +38,7 @@ const UserSearch = ({ onUserSelect }) => {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         const delay = setTimeout(() => {
@@ -124,7 +124,9 @@ const UserSearch = ({ onUserSelect }) => {
                                         </span>
                                         )}
                                     </p>
-                                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                                    <p className="text-xs text-gray-500 truncate">
+                                        @{user.displayName?.toLowerCase().replace(/\s+/g, "_") || "user"}
+                                    </p>
                                 </div>
                             </div>
                     ))}

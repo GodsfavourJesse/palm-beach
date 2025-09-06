@@ -8,10 +8,10 @@ import ChatHome from "./pages/Chat/ChatHome";
 import PrivateRoute from "./routes/PrivateRoute";
 import NotFound from "./Auth/validationComponents/NotFound";
 import EditProfile from "./pages/Profile/EditProfile";
-import ContactsPage from "./pages/SidebarSettings/ContactsPage";
-import CallsPage from "./pages/SidebarSettings/CallsPage";
+// import ContactsPage from "./pages/SidebarSettings/ContactsPage";
+// import CallsPage from "./pages/SidebarSettings/CallsPage";
 import Settings from "./pages/Settings";
-import InviteFriends from "./pages/InviteFriends";
+// import InviteFriends from "./pages/InviteFriends";
 import WelcomePage from "./pages/WelcomePage";
 
 function App() {
@@ -45,10 +45,10 @@ function App() {
                 </PrivateRoute>} 
             />
             <Route path="/profile" element={<EditProfile />} />
-            <Route path="/contacts" element={<ContactsPage />} />
-            <Route path="/calls" element={<CallsPage />} />
+            {/* <Route path="/contacts" element={<ContactsPage />} /> */}
+            {/* <Route path="/calls" element={<CallsPage />} /> */}
             <Route path="/settings" element={<Settings />} />
-            <Route path="/invite-friends" element={<InviteFriends />} />
+            {/* <Route path="/invite-friends" element={<InviteFriends />} /> */}
 
             <Route path="*" element={<NotFound />} />
         </Routes>

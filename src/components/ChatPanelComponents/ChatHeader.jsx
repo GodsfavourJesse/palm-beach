@@ -26,7 +26,7 @@ const ChatHeader = ({ selectedUser, onBack, isMobile }) => {
 
     return (
         <>
-            <div className="sticky top-0 z-10 flex items-center gap-4 p-4 border-b border-gray-200 bg-white shadow-sm">
+            <div className="flex items-center gap-4 p-4 border-b border-gray-200 bg-white shadow-sm">
                 {isMobile && (
                     <button
                         onClick={onBack}
@@ -49,7 +49,7 @@ const ChatHeader = ({ selectedUser, onBack, isMobile }) => {
                         <p className="font-semibold text-gray-900 leading-tight">
                             {selectedUser.displayName}
                         </p>
-                        <span className="flex items-center gap-1 text-sm text-gray-500">{selectedUser.email}</span>
+                        <span className="flex items-center gap-1 text-sm text-gray-500">{selectedUser.bio}</span>
                         {/* <span className="flex items-center gap-1 text-sm text-gray-500">
                             <UserStatusIndicator 
                                 isOnline={onlineStatus?.isOnline} 
