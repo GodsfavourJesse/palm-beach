@@ -30,7 +30,7 @@ const ChatHome = () => {
     const handleOpenInfoPanel = () => setShowInfoPanel(true);
     const handleCloseInfoPanel = () => setShowInfoPanel(false);
 
-    // ✅ Normalize selected user object (always has .uid)
+    // Normalize selected user object (always has .uid)
     const handleUserSelect = (u) => {
         if (!u) return;
         const normalized = {
@@ -43,39 +43,39 @@ const ChatHome = () => {
         setShowSearch(false);
     };
 
-    // ✅ Splash screen (2s)
+    // Splash screen (2s)
     useEffect(() => {
         const timer = setTimeout(() => setInitialLoading(false), 2000);
         return () => clearTimeout(timer);
     }, []);
 
-    // ✅ Window resize handler
+    // Window resize handler
     useEffect(() => {
         const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // ✅ Auth check
+    // Auth check
     useEffect(() => {
         if (!loading && !user && !loggingOut) navigate('/login');
     }, [user, loading, loggingOut, navigate]);
 
-    // ✅ Recent chats
+    // Recent chats
     useEffect(() => {
         if (!user) return;
         const unsubscribe = getRecentChats(user, setRecentChats);
         return () => unsubscribe && unsubscribe();
     }, [user]);
 
-    // ✅ Messages with selected user
+    // Messages with selected user
     useEffect(() => {
         if (!selectedUser || !user) return;
         const unsubscribe = getMessagesBetweenUsers(user, selectedUser, setMessages);
         return () => unsubscribe && unsubscribe();
     }, [selectedUser, user]);
 
-    // ✅ Mark as seen
+    // Mark as seen
     useEffect(() => {
         const markSeen = async () => {
             const unseen = messages.filter(
@@ -93,7 +93,7 @@ const ChatHome = () => {
         if (selectedUser && user) markSeen();
     }, [messages, selectedUser, user]);
 
-    // ✅ Send message
+    // Send message
     const handleSendMessage = async (text) => {
         if (!user || !selectedUser) return;
         try {
@@ -104,7 +104,7 @@ const ChatHome = () => {
         }
     };
 
-    // ✅ Logout (sign out immediately, then show spinner)
+    // Logout (sign out immediately, then show spinner)
     const handleLogout = async () => {
         setLoggingOut(true);
         try {
@@ -120,7 +120,7 @@ const ChatHome = () => {
         }
     };
 
-    // ✅ Loading states
+    // Loading states
     if (loading || initialLoading) {
         return (
             <div className="flex items-center justify-center h-screen bg-black text-white">
@@ -134,16 +134,16 @@ const ChatHome = () => {
 
     if (loggingOut) {
         return (
-        <div className="flex items-center justify-center h-screen bg-black text-white">
-            <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-red-500 mx-auto mb-4"></div>
-                <p className="text-xl font-semibold">Logging you out...</p>
+            <div className="flex items-center justify-center h-screen bg-black text-white">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-red-500 mx-auto mb-4"></div>
+                    <p className="text-xl font-semibold">Logging you out...</p>
+                </div>
             </div>
-        </div>
         );
     }
 
-    // ✅ Main UI
+    // Main UI
     return (
         <div className="h-screen w-screen text-white overflow-hidden relative">
             {isMobile ? (
@@ -152,8 +152,8 @@ const ChatHome = () => {
                         <SearchUsersPage
                             onBack={() => setShowSearch(false)}
                             onUserSelect={(user) => {
-                                setSelectedUser(user);  // ✅ open DM
-                                setShowSearch(false);   // ✅ close search page
+                                setSelectedUser(user);  // open DM
+                                setShowSearch(false);   // close search page
                             }}
                         />
                     ) : !selectedUser ? (
@@ -164,7 +164,7 @@ const ChatHome = () => {
                             isMobile={true}
                             onOpenInfo={handleOpenInfoPanel}
                             onOpenSearch={() => setShowSearch(true)}
-                            onLogout={handleLogout} // ✅ pass logout down if needed
+                            onLogout={handleLogout} // pass logout down if needed
                         />
                     ) : (
                         <ChatPanel
@@ -188,8 +188,8 @@ const ChatHome = () => {
                         <SearchUsersPage
                             onBack={() => setShowSearch(false)}
                             onUserSelect={(user) => {
-                                setSelectedUser(user);  // ✅ open DM
-                                setShowSearch(false);   // ✅ close search page
+                                setSelectedUser(user);  // open DM
+                                setShowSearch(false);   // close search page
                             }}
                         />
                     ) : (
