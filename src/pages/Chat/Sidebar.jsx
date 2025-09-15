@@ -47,7 +47,7 @@ const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile, onOpenInfo 
             <div className="flex items-center justify-between p-4">
                 <h1 className="text-xl font-semibold flex items-center gap-2">
                     <MessageSquare size={20} className="text-indigo-600" />
-                    Palm Beach
+                    Chats
                 </h1>
 
                 {/* Toggle Search */}
@@ -68,7 +68,6 @@ const Sidebar = ({ currentUser, onUserSelect, recentChats, isMobile, onOpenInfo 
 
             {/* Chat List */}
             <div className="flex-1 overflow-y-auto no-scrollbar">
-                <h3 className="text-sm font-semibold text-gray-600 px-4 py-2">Chats</h3>
                 <UserList
                     currentUser={currentUser}
                     recentChats={recentChats}
