@@ -13,6 +13,7 @@ import EditProfile from "./pages/Profile/EditProfile";
 import Settings from "./pages/Settings";
 // import InviteFriends from "./pages/InviteFriends";
 import WelcomePage from "./pages/WelcomePage";
+import { requestNotificationPermission, onMessageListener } from "./firebase/notifications";
 
 function App() {
     useEffect(() => {
@@ -31,6 +32,15 @@ function App() {
             localStorage.removeItem("lastLogin");
             }
         }
+    }, []);
+    
+    useEffect(() => {
+        requestNotificationPermission();
+
+        onMessageListener().then((payload) => {
+            console.log("Foreground message received: ", payload);
+            alert(`New Message: ${payload.notification.title} - ${payload.notification.body}`);
+        });
     }, []);
 
     return (
