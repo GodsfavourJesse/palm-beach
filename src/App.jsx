@@ -8,12 +8,15 @@ import ChatHome from "./pages/Chat/ChatHome";
 import PrivateRoute from "./routes/PrivateRoute";
 import NotFound from "./Auth/validationComponents/NotFound";
 import EditProfile from "./pages/Profile/EditProfile";
-// import ContactsPage from "./pages/SidebarSettings/ContactsPage";
-// import CallsPage from "./pages/SidebarSettings/CallsPage";
 import Settings from "./pages/Settings";
-// import InviteFriends from "./pages/InviteFriends";
 import WelcomePage from "./pages/WelcomePage";
-import { requestNotificationPermission, onMessageListener } from "./firebase/notifications";
+
+import {
+    onMessageListener,
+    requestNotificationPermissionAndSave,
+} from "./firebase/notifications";
+
+import { onAuthStateChanged } from "firebase/auth";
 
 function App() {
     useEffect(() => {
@@ -24,43 +27,64 @@ function App() {
         const lastLogin = localStorage.getItem("lastLogin");
 
         if (lastLogin) {
-            const diff = Date.now() - parseInt(lastLogin);
-            const threeDays = 3 * 24 * 60 * 60 * 1000;
+            const diff = Date.now() - parseInt(lastLogin, 10);
+            const oneYear = 365 * 24 * 60 * 60 * 1000; //365 days
 
-            if (diff > threeDays) {
-            auth.signOut();
-            localStorage.removeItem("lastLogin");
+            if (diff > oneYear) {
+                auth.signOut();
+                localStorage.removeItem("lastLogin");
             }
+        } else {
+            // First time login, set timestamp
+            localStorage.setItem('lastLogin', Date.now().toString());
         }
     }, []);
-    
-    useEffect(() => {
-        requestNotificationPermission();
 
-        onMessageListener().then((payload) => {
-            console.log("Foreground message received: ", payload);
-            alert(`New Message: ${payload.notification.title} - ${payload.notification.body}`);
+  // Foreground push notification handler
+    useEffect(() => {
+        requestNotificationPermissionAndSave();
+
+        onMessageListener((payload) => {
+            console.log("Foreground message received:", payload);
+            if (payload.notification) {
+                alert(
+                    `New Message: ${payload.notification.title} - ${payload.notification.body}`
+                );
+                new notification(payload.notification.title, {
+                    body: payload.notification.body,
+                    icon: '/pwa-192x192.png',
+                });
+            }
         });
+    }, []);
+
+    // Save FCM token when user logs in
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await requestNotificationPermissionAndSave(user);
+            }
+        });
+        return unsubscribe;
     }, []);
 
     return (
         <Routes>
-            <Route path="/" element={<WelcomePage />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/home" element={
+        <Route path="/" element={<WelcomePage />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route
+            path="/home"
+            element={
                 <PrivateRoute>
                     <ChatHome />
-                </PrivateRoute>} 
-            />
-            <Route path="/profile" element={<EditProfile />} />
-            {/* <Route path="/contacts" element={<ContactsPage />} /> */}
-            {/* <Route path="/calls" element={<CallsPage />} /> */}
-            <Route path="/settings" element={<Settings />} />
-            {/* <Route path="/invite-friends" element={<InviteFriends />} /> */}
-
-            <Route path="*" element={<NotFound />} />
+                </PrivateRoute>
+            }
+        />
+        <Route path="/profile" element={<EditProfile />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<NotFound />} />
         </Routes>
     );
 }

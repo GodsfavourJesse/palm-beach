@@ -36,9 +36,16 @@ const UserList = ({ currentUser, recentChats, onUserSelect }) => {
                 chat.senderId === currentUser.uid ? chat.receiverId : chat.senderId;
 
                 if (!userProfiles[otherUserId]) {
-                    const userDoc = await getDoc(doc(db, "users", otherUserId));
-                    if (userDoc.exists()) {
-                        newProfiles[otherUserId] = userDoc.data();
+                    const cached = localStorage.getItem(`user_${otherUserId}`);
+                    if (cached) {
+                        newProfiles[otherUserId] = JSON.parse(cached);
+                    } else {
+                        const userDoc = await getDoc(doc(db, 'users', otherUserId));
+                        if (userDoc.exists()) {
+                            newProfiles[otherUserId] = userDoc.data();
+                            // Save offline cache
+                            localStorage.setItem(`user_${otherUserId}`, JSON.stringify(userDoc.data()));
+                        }
                     }
                 }
             }
@@ -46,7 +53,7 @@ const UserList = ({ currentUser, recentChats, onUserSelect }) => {
         };
 
         if (recentChats.length > 0) {
-        fetchUsers();
+            fetchUsers();
         }
     }, [recentChats]);
 

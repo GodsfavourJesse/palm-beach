@@ -1,27 +1,41 @@
-import { messaging } from "./firebase";
+import { Import } from "lucide-react";
+import { messaging, db } from "./firebase";
 import { getToken, onMessage } from "firebase/messaging";
+import { doc, updateDoc } from "firebase/firestore";
+// import { auth } from "./firebase";
 
-const VAPID_KEY = "BIAj9qQtaqt-eZrLGpoQ9ewY_PxZLI3Bo7n9hj2NLg9BWlnvCrs73kS--cm2nYp4cVqbgBeHAlAQyCu-qDLNNY4";
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
 // Request permission & get device token
-export const requestNotificationPermission = async () => {
+export const requestNotificationPermissionAndSave = async (user) => {
+    if (!user) return null;
     try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+            console.log('Notification permission not granted');
+            return null;
+        }
+
         const token = await getToken(messaging, { vapidKey: VAPID_KEY });
         if (token) {
-            console.log("User FCM Token:", token);
+            // Save token on user doc
+            await updateDoc(doc(db, 'users', user.uid), { fcmToken: token });
+            console.log('Saved token for user:', token);
             return token;
         } else {
-        console.warn("No registration token available.");
+            console.warn('No registration token available.');
+            return null;
         }
     } catch (err) {
-        console.error("Error getting token: ", err);
-    }
+        console.error('Failed to get token', err);
+        return null;
+    };
 };
 
-// Foreground notifications handler
-export const onMessageListener = () =>
-    new Promise((resolve) => {
-        onMessage(messaging, (payload) => {
-        resolve(payload);
-        });
+// Listen for foreground messages
+export const onMessageListener = (cb) => {
+    return onMessage(messaging, (payload) => {
+        console.log('Foreground message', payload);
+        if (cb) cb(payload);
     });
+};

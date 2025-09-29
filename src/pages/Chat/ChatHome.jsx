@@ -30,6 +30,23 @@ const ChatHome = () => {
     const handleOpenInfoPanel = () => setShowInfoPanel(true);
     const handleCloseInfoPanel = () => setShowInfoPanel(false);
 
+    const loadMessages = async (userId) => {
+        const cacheKey = `messages_${user.uid}_${userId}`;
+        try {
+            const msgs = await getMessagesBetweenUsers(user.uid, userId);
+            setMessages(msgs);
+
+            // Save to localstorage for offline
+            localStorage.setItem(cacheKey, JSON.stringify(msgs));
+        } catch (err) {
+            console.warn("Offline mode: loading cached messages");
+            const cached = localStorage.getItem(cacheKey);
+            if (cached) {
+                setMessages(JSON.parse(cached));
+            }
+        }
+    };
+
     // Normalize selected user object (always has .uid)
     const handleUserSelect = (u) => {
         if (!u) return;

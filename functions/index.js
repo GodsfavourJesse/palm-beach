@@ -1,32 +1,62 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+// functions/index.js
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 
-const {setGlobalOptions} = require("firebase-functions");
-const {onRequest} = require("firebase-functions/https");
-const logger = require("firebase-functions/logger");
+admin.initializeApp();
 
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
+const db = admin.firestore();
 
-// Create and deploy your first functions
-// https://firebase.google.com/docs/functions/get-started
+exports.notifyOnNewMessage = functions.firestore
+  .document("messages/{messageId}")
+  .onCreate(async (snap, context) => {
+    const message = snap.data();
+    if (!message) return null;
 
-// exports.helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
+    const { senderId, receiverId, text } = message;
+
+    try {
+      // fetch receiver token and sender info
+      const receiverDoc = await db.collection("users").doc(receiverId).get();
+      const senderDoc = await db.collection("users").doc(senderId).get();
+
+      if (!receiverDoc.exists) {
+        console.log("Receiver not found in Firestore");
+        return null;
+      }
+
+      const receiverData = receiverDoc.data();
+      const token = receiverData?.fcmToken;
+
+      if (!token) {
+        console.log("Receiver has no FCM token, skipping push");
+        return null;
+      }
+
+      const senderName =
+        senderDoc.exists && senderDoc.data().displayName
+          ? senderDoc.data().displayName
+          : "Someone";
+
+      const payload = {
+        notification: {
+          title: ${senderName},
+          body:
+            text && text.length > 100
+              ? text.slice(0, 97) + "..."
+              : text || "New message",
+        },
+        data: {
+          senderId: senderId || "",
+          receiverId: receiverId || "",
+          click_action: "FLUTTER_NOTIFICATION_CLICK", // standard FCM click action
+        },
+      };
+
+      const response = await admin.messaging().sendToDevice(token, payload);
+      console.log("Sent notification:", response);
+      return null;
+    } catch (err) {
+      console.error("Error sending push:", err);
+      return null;
+    }
+  });
