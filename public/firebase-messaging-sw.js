@@ -1,36 +1,44 @@
 /* eslint-disable no-undef */
+
+// Import Firebase libraries (compat for service workers)
 importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js");
 importScripts("https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js");
-importScripts("/firebase-config.js");
 
-firebase.initializeApp(self.FIREBASE_CONFIG);
+// Initialize Firebase in the Service Worker
+firebase.initializeApp({
+    apiKey: "AIzaSyAWTEwa_o41W-HHK2QWLzED3_MhT_J0tas",
+    authDomain: "palm-beach-a8b8b.firebaseapp.com",
+    projectId: "palm-beach-a8b8b",
+    storageBucket: "palm-beach-a8b8b.firebasestorage.app",
+    messagingSenderId: "611603495137",
+    appId: "1:611603495137:web:0e5fed3f1e8e34d5259fa0",
+});
 
+// Retrieve Firebase Messaging
 const messaging = firebase.messaging();
 
-// Background notifications handler
+// Handle background messages
 messaging.onBackgroundMessage((payload) => {
-    console.log("Received background message: ", payload);
+    console.log("[firebase-messaging-sw.js] Received background message:", payload);
 
-    const notificationTitle = payload.notification.title || 'New Message'; 
+    const notificationTitle = payload.notification?.title || "New Message";
     const notificationOptions = {
-        body: payload.notification.body || '',
-        icon: "/pwa-192x192.png", // use your PWA icon
-        data: payload.data || {},
+        body: payload.notification?.body || "",
+        icon: "/pwa-192x192.png", // ensure this file exists in /public
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
 });
 
-self.addEventListener('notificationclick', function (event) {
+// Handle notification click
+self.addEventListener("notificationclick", (event) => {
     event.notification.close();
-    // Focus/open your app - adapt URL of needed
     event.waitUntil(
-        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+        clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
             if (clientList.length > 0) {
-                const client = clientList[0];
-                return client.focus();
+                return clientList[0].focus();
             }
-            return clients.openWindow('/');
+            return clients.openWindow("/"); // open homepage if no tab is active
         })
     );
 });

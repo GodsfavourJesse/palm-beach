@@ -50,7 +50,7 @@ function App() {
                 alert(
                     `New Message: ${payload.notification.title} - ${payload.notification.body}`
                 );
-                new notification(payload.notification.title, {
+                new Notification(payload.notification.title, {
                     body: payload.notification.body,
                     icon: '/pwa-192x192.png',
                 });
