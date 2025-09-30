@@ -42,30 +42,37 @@ function App() {
 
   // Foreground push notification handler
     useEffect(() => {
-        requestNotificationPermissionAndSave();
+        const unsubscribeMessage = onMessageListener((payload) => {
+            console.log('Foreground message recieved:', payload);
 
-        onMessageListener((payload) => {
-            console.log("Foreground message received:", payload);
             if (payload.notification) {
+                // Show alert (replace with custom toast/snaackbar Ui later)
                 alert(
-                    `New Message: ${payload.notification.title} - ${payload.notification.body}`
+                    `${payload.notification.title}: ${payload.notification.body}`
                 );
-                new Notification(payload.notification.title, {
-                    body: payload.notification.body,
-                    icon: '/pwa-192x192.png',
-                });
+
+                // Add a notification dot/badge (Chrome Andriod only)
+                if ('setAppBadge' in navigator) {
+                    navigator.setAppBadge(1).catch(console.error);
+                }
             }
         });
+        return unsubscribeMessage;
     }, []);
 
     // Save FCM token when user logs in
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await requestNotificationPermissionAndSave(user);
+            } else {
+                //clear badge when sign out
+                if ('clearAppBadge' in navigator) {
+                    navigator.clearAppBadge().catch(console.error);
+                }
             }
         });
-        return unsubscribe;
+        return unsubscribeAuth;
     }, []);
 
     return (

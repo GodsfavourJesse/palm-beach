@@ -28,6 +28,11 @@ messaging.onBackgroundMessage((payload) => {
     };
 
     self.registration.showNotification(notificationTitle, notificationOptions);
+
+    // update badge when background notification recieved
+    if ('setAppBadge' in navigator) {
+        navigator.setAppBadge(1).catch(console.error);
+    }
 });
 
 // Handle notification click
@@ -38,7 +43,7 @@ self.addEventListener("notificationclick", (event) => {
             if (clientList.length > 0) {
                 return clientList[0].focus();
             }
-            return clients.openWindow("/"); // open homepage if no tab is active
+            return clients.openWindow("/home"); // open homepage if no tab is active
         })
     );
 });
