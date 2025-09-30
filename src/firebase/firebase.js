@@ -1,6 +1,8 @@
-// Import the functions you need from the SDKs you need
-import { getApps, initializeApp } from "firebase/app";
-// import { getAnalytics } from "firebase/analytics";
+// Firebase core
+import { initializeApp, getApps } from "firebase/app";
+
+
+// Firebase services
 import { browserLocalPersistence, getAuth, setPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -21,14 +23,15 @@ const firebaseConfig = {
 };
 
 
-// Initialize Firebase
+// Initialize Firebase (avoid reinitialization)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
-// const analytics = getAnalytics(app);
 
+// services
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const messaging = getMessaging(app);
 
+// Auth with persistence
 const auth = getAuth(app);
 setPersistence(auth, browserLocalPersistence); //35 days (until user signs out)
 export { auth };
