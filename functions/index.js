@@ -1,62 +1,63 @@
-// functions/index.js
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
-
 const db = admin.firestore();
+const fcm = admin.messaging();
 
-exports.notifyOnNewMessage = functions.firestore
+/**
+ * Trigger when a new message is created in Firestore
+ * Adjust collection path if yours differs (e.g., /chats/{chatId}/messages/{messageId})
+ */
+exports.sendMessageNotification = functions.firestore
   .document("messages/{messageId}")
-  .onCreate(async (snap, context) => {
-    const message = snap.data();
-    if (!message) return null;
+  .onCreate(async (snapshot, context) => {
+    const messageData = snapshot.data();
 
-    const { senderId, receiverId, text } = message;
+    if (!messageData) return null;
+
+    const { senderId, text, participants } = messageData;
 
     try {
-      // fetch receiver token and sender info
-      const receiverDoc = await db.collection("users").doc(receiverId).get();
+      // Get sender info
       const senderDoc = await db.collection("users").doc(senderId).get();
+      const senderName = senderDoc.exists ? senderDoc.data().displayName || "Someone" : "Someone";
 
-      if (!receiverDoc.exists) {
-        console.log("Receiver not found in Firestore");
+      // Get recipient(s) tokens
+      const tokens = [];
+      for (const uid of participants || []) {
+        if (uid !== senderId) {
+          const userDoc = await db.collection("users").doc(uid).get();
+          if (userDoc.exists && userDoc.data().fcmToken) {
+            tokens.push(userDoc.data().fcmToken);
+          }
+        }
+      }
+
+      if (tokens.length === 0) {
+        console.log("⚠ No tokens found for recipients");
         return null;
       }
 
-      const receiverData = receiverDoc.data();
-      const token = receiverData?.fcmToken;
-
-      if (!token) {
-        console.log("Receiver has no FCM token, skipping push");
-        return null;
-      }
-
-      const senderName =
-        senderDoc.exists && senderDoc.data().displayName
-          ? senderDoc.data().displayName
-          : "Someone";
-
+      // Build notification
       const payload = {
         notification: {
-          title: ${senderName},
-          body:
-            text && text.length > 100
-              ? text.slice(0, 97) + "..."
-              : text || "New message",
+          title: New message from ${senderName},
+          body: text ? text.substring(0, 50) : "📩 You have a new message",
         },
         data: {
-          senderId: senderId || "",
-          receiverId: receiverId || "",
-          click_action: "FLUTTER_NOTIFICATION_CLICK", // standard FCM click action
+          senderId,
+          click_action: "FLUTTER_NOTIFICATION_CLICK", // helps Android foreground handling
         },
       };
 
-      const response = await admin.messaging().sendToDevice(token, payload);
-      console.log("Sent notification:", response);
-      return null;
+      // Send to all tokens
+      const response = await fcm.sendToDevice(tokens, payload);
+      console.log("✅ Notifications sent:", response);
+
+      return response;
     } catch (err) {
-      console.error("Error sending push:", err);
+      console.error("❌ Error sending notification:", err);
       return null;
     }
   });
